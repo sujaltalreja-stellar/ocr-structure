@@ -9,20 +9,21 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ============================================================
-# OPTIONAL AI PROVIDER DETECTION
+# AI PROVIDERS (Sarvam AI primary, Mistral fallback)
 # ============================================================
 
-try:
-    from sarvamai import SarvamAI
-    SARVAM_AVAILABLE = True
-except Exception:
-    SARVAM_AVAILABLE = False
+SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "")
+SARVAM_AVAILABLE = True
+SARVAM_MODEL = "sarvam-105b-conversations"
+SARVAM_BASE_URL = "https://api.sarvam.ai/v1"
 
-try:
-    import ollama
-    OLLAMA_AVAILABLE = True
-except Exception:
-    OLLAMA_AVAILABLE = False
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+MISTRAL_AVAILABLE = bool(MISTRAL_API_KEY)
+MISTRAL_MODEL = "mistral-small-latest"
+MISTRAL_BASE_URL = "https://api.mistral.ai/v1"
+
+OLLAMA_AVAILABLE = False
+
 
 
 # ============================================================

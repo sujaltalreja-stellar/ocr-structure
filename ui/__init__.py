@@ -18,6 +18,10 @@ from ui.results import (
     render_resubmission_readiness,
     render_export_section,
 )
+from ui.correction_view import (
+    render_correction_view,
+    render_single_pdf_auto_correction,
+)
 
 __all__ = [
     "apply_theme",
@@ -32,4 +36,6 @@ __all__ = [
     "render_drawing_evidence",
     "render_resubmission_readiness",
     "render_export_section",
+    "render_correction_view",
+    "render_single_pdf_auto_correction",
 ]

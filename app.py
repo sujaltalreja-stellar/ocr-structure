@@ -60,6 +60,7 @@ from ui import (
     render_drawing_evidence,
     render_resubmission_readiness,
     render_export_section,
+    render_single_pdf_auto_correction,
 )
 
 # ============================================================
@@ -86,6 +87,31 @@ theme_choice = ai_config.get("theme", "☀️ Light Mode")
 # Apply responsive theme styling
 apply_theme(theme_choice)
 
+workflow_mode = ai_config.get("workflow_mode", "🛠️ Auto-Correction Mode (1 PDF)")
+
+if "Auto-Correction" in workflow_mode:
+    st.title("🛠️ Auto-Correction Mode")
+    st.write(
+        """
+        **Autonomous Consultant Comment Rectification Engine**
+        
+        Upload a **single consultant-commented engineering drawing PDF**.
+        The AI automatically detects consultant markups, plans the fixes, wipes outdated annotations,
+        burns compliant text & linework, draws standard **CAD revision clouds**, and outputs the **updated drawing file with all corrections**!
+        """
+    )
+    render_single_pdf_auto_correction(
+        selected_provider=selected_provider,
+        selected_model=selected_model,
+        api_key=api_key,
+        theme_choice=theme_choice,
+    )
+    st.stop()
+
+# ============================================================
+# 2-DRAWING REVISION QA AUDIT WORKFLOW
+# ============================================================
+
 st.title("📐 DULB Engineering Drawing QA")
 
 st.write(
@@ -110,7 +136,7 @@ st.info(
 )
 
 # ============================================================
-# 1. FILE UPLOAD
+# 1. FILE UPLOAD (2 DRAWINGS)
 # ============================================================
 
 st.divider()

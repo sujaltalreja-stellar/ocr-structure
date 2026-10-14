@@ -1,15 +1,27 @@
 # ============================================================
 # DULB ENGINEERING QA POC - SIDEBAR CONFIGURATION UI
+# Provider: Sarvam AI (Primary)
 # ============================================================
 
 import os
 import streamlit as st
-from config import SARVAM_AVAILABLE, OLLAMA_AVAILABLE
-from core.ai_client import get_ollama_models
+from config import SARVAM_API_KEY, SARVAM_MODEL, MISTRAL_API_KEY, MISTRAL_MODEL
 
 
 def render_sidebar():
-    """Renders the AI model configuration, retrieval settings, and theme toggle in the sidebar."""
+    """Renders the workflow mode selector, AI model configuration, and theme toggle in the sidebar."""
+    st.sidebar.header("📍 Workflow Mode")
+    workflow_mode = st.sidebar.radio(
+        "Choose Mode:",
+        [
+            "🛠️ Auto-Correction Mode (1 PDF)",
+            "🔍 Revision QA Audit (2 PDFs)",
+        ],
+        index=0,
+        key="app_workflow_mode",
+    )
+    st.sidebar.divider()
+
     st.sidebar.header("🎨 Theme & Appearance")
     theme_choice = st.sidebar.selectbox(
         "Display Theme",
@@ -20,46 +32,74 @@ def render_sidebar():
     st.sidebar.divider()
     st.sidebar.header("⚙️ AI Settings")
 
-    providers = []
-    if SARVAM_AVAILABLE:
-        providers.append("Sarvam AI")
-    if OLLAMA_AVAILABLE:
-        providers.append("Ollama")
-    if not providers:
-        providers = ["Sarvam AI", "Ollama"]
-
+    providers = ["Sarvam AI", "Mistral AI"]
     selected_provider = st.sidebar.selectbox("AI Provider", providers, index=0)
+
     selected_model = None
     api_key = None
 
     if selected_provider == "Sarvam AI":
-        sarvam_api_key = os.getenv("SARVAM_API_KEY", "")
-        key_source = ".env / environment"
-        if not sarvam_api_key and hasattr(st, "secrets") and "SARVAM_API_KEY" in st.secrets:
-            sarvam_api_key = str(st.secrets["SARVAM_API_KEY"]).strip()
-            key_source = "Streamlit Cloud secrets"
+        key_from_env = SARVAM_API_KEY or os.getenv("SARVAM_API_KEY", "")
+        key_from_secrets = ""
+        try:
+            if hasattr(st, "secrets") and "SARVAM_API_KEY" in st.secrets:
+                key_from_secrets = str(st.secrets["SARVAM_API_KEY"]).strip()
+        except Exception:
+            pass
 
-        if not sarvam_api_key:
-            api_key = st.sidebar.text_input("Sarvam API Key", type="password")
+        auto_key = key_from_env or key_from_secrets
+        if auto_key:
+            api_key = auto_key
+            st.sidebar.success("✅ Sarvam API key loaded from environment")
         else:
-            api_key = sarvam_api_key
-            st.sidebar.success(f"Sarvam API key loaded from {key_source}")
+            api_key = st.sidebar.text_input(
+                "Sarvam API Key",
+                type="password",
+                placeholder="sk_...",
+                help="Enter your Sarvam AI API subscription key",
+            )
 
         selected_model = st.sidebar.selectbox(
             "Sarvam Model",
             [
                 "sarvam-105b-conversations",
-                "sarvam-2b",
+                "sarvam-105b",
+            ],
+            index=0,
+            help="sarvam-105b-conversations: High-precision engineering instruction following.",
+        )
+
+    else:
+        # Mistral fallback
+        key_from_env = MISTRAL_API_KEY or os.getenv("MISTRAL_API_KEY", "")
+        key_from_secrets = ""
+        try:
+            if hasattr(st, "secrets") and "MISTRAL_API_KEY" in st.secrets:
+                key_from_secrets = str(st.secrets["MISTRAL_API_KEY"]).strip()
+        except Exception:
+            pass
+
+        auto_key = key_from_env or key_from_secrets
+        if auto_key:
+            api_key = auto_key
+            st.sidebar.success("✅ Mistral API key loaded from environment")
+        else:
+            api_key = st.sidebar.text_input(
+                "Mistral API Key",
+                type="password",
+                placeholder="mstrl_...",
+            )
+
+        selected_model = st.sidebar.selectbox(
+            "Mistral Model",
+            [
+                "mistral-small-latest",
+                "mistral-medium-latest",
+                "ministral-8b-latest",
+                "codestral-latest",
             ],
             index=0,
         )
-
-    elif selected_provider == "Ollama":
-        ollama_models = get_ollama_models()
-        if ollama_models:
-            selected_model = st.sidebar.selectbox("Ollama Model", ollama_models)
-        else:
-            st.sidebar.warning("No Ollama model detected.")
 
     st.sidebar.divider()
     st.sidebar.subheader("Retrieval Settings")
@@ -72,14 +112,14 @@ def render_sidebar():
     )
     st.sidebar.caption(
         """
-        The complete extracted drawing JSON is never sent to AI.
-        Only the consultant comment, nearby old/new region,
-        vector counts, visual similarity and top relevant
-        revised-drawing text blocks are sent.
+        Only the consultant comment, nearby drawing region,
+        vector counts, visual similarity, and top relevant
+        revised-drawing text blocks are sent to the AI.
         """
     )
 
     return {
+        "workflow_mode": workflow_mode,
         "provider": selected_provider,
         "model": selected_model,
         "api_key": api_key,

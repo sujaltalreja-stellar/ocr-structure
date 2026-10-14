@@ -71,6 +71,8 @@ def get_comments(pdf_data):
             content = normalize_text(annotation.get("content") or "")
             if not content:
                 continue
+            verts = annotation.get("vertices")
+            tip = [float(verts[0][0]), float(verts[0][1])] if (verts and len(verts) > 0) else None
             comments.append({
                 "id": None,
                 "page": page_number,
@@ -78,6 +80,8 @@ def get_comments(pdf_data):
                 "subject": annotation.get("subject"),
                 "title": annotation.get("title"),
                 "bbox": annotation.get("bbox"),
+                "vertices": verts,
+                "arrow_tip": tip,
                 "source": "annotation",
             })
         for block in page["text"]["blocks"]:
